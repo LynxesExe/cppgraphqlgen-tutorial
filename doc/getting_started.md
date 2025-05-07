@@ -65,31 +65,30 @@ Strictly speaking, the only requirements are the function that the generated sch
 By exploring the schemagen `QueryObject.h` file and searching `static_assert` you can notice how there will be two matches, reported below:
 
 ``` cpp
-		[[nodiscard("unnecessary call")]] service::AwaitableScalar<std::vector<std::string>> getNames(service::FieldParams&& params) const override
-		{
-			if constexpr (methods::QueryHas::getNamesWithParams<T>)
-			{
-				return { _pimpl->getNames(std::move(params)) };
-			}
-			else
-			{
-				static_assert(methods::QueryHas::getNames<T>, R"msg(Query::getNames is not implemented)msg");
-				return { _pimpl->getNames() };
-			}
-		}
-
-		[[nodiscard("unnecessary call")]] service::AwaitableObject<std::vector<std::shared_ptr<Thing>>> getStuff(service::FieldParams&& params, std::optional<std::string>&& idArg) const override
-		{
-			if constexpr (methods::QueryHas::getStuffWithParams<T>)
-			{
-				return { _pimpl->getStuff(std::move(params), std::move(idArg)) };
-			}
-			else
-			{
-				static_assert(methods::QueryHas::getStuff<T>, R"msg(Query::getStuff is not implemented)msg");
-				return { _pimpl->getStuff(std::move(idArg)) };
-			}
-		}
+[[nodiscard("unnecessary call")]] service::AwaitableScalar<std::vector<std::string>> getNames(service::FieldParams&& params) const override
+{
+	if constexpr (methods::QueryHas::getNamesWithParams<T>)
+	{
+		return { _pimpl->getNames(std::move(params)) };
+	}
+	else
+	{
+		static_assert(methods::QueryHas::getNames<T>, R"msg(Query::getNames is not implemented)msg");
+		return { _pimpl->getNames() };
+	}
+}
+[[nodiscard("unnecessary call")]] service::AwaitableObject<std::vector<std::shared_ptr<Thing>>> getStuff(service::FieldParams&& params, std::optional<std::string>&& idArg) const override
+{
+	if constexpr (methods::QueryHas::getStuffWithParams<T>)
+	{
+		return { _pimpl->getStuff(std::move(params), std::move(idArg)) };
+	}
+	else
+	{
+		static_assert(methods::QueryHas::getStuff<T>, R"msg(Query::getStuff is not implemented)msg");
+		return { _pimpl->getStuff(std::move(idArg)) };
+	}
+}
 ```
 
 these two blocks of code are responsible for checking whether you class, of which instance you will be providing to this object, satisfies the requirement of having certain methods.
@@ -218,17 +217,17 @@ These methods may throw an exception, therefore you need to wrap them in a `try/
 Below an example:
 
 ```cpp
-  // Previous service init code...
-  
-  std::string final_output = "Empty Result!";
-  try {
-    ::graphql::peg::ast query_ast = ::graphql::peg::parseString(query_input);
-    final_output =
-        ::graphql::response::toJSON(service->resolve({query_ast, ""}).get());
-  } catch (std::exception &e) {
-    std::cerr << e.what() << std::endl;
-  }
-  return std::string(final_output);
+// Previous service init code...
+
+std::string final_output = "Empty Result!";
+try {
+  ::graphql::peg::ast query_ast = ::graphql::peg::parseString(query_input);
+  final_output =
+      ::graphql::response::toJSON(service->resolve({query_ast, ""}).get());
+} catch (std::exception &e) {
+  std::cerr << e.what() << std::endl;
+}
+return std::string(final_output);
 ```
 
 In this case `final_output` will be the final `GraphQL` response which can be given to a client.
